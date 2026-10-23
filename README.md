@@ -16,7 +16,6 @@
 | 운영체제 | Windows 10 / 11 (설치 없이 바로 실행되는 포터블 exe) |
 | AI | **Claude Pro 이상 구독** + **Claude Code** |
 | AI 사용료 | 별도 없음. 원고는 내 PC에서 내 Claude 계정으로 만들어지고, 내 구독 사용량에서 차감됩니다 |
-| 가격 | 무료 (베타) |
 
 > **Claude Desktop 앱이 아니라 Claude Code가 필요합니다.**
 > Claude Code는 명령어로 실행하는 별도 프로그램입니다. Claude 무료 플랜에서는 쓸 수 없고 Pro·Max 이상 구독이 필요합니다.
