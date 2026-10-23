@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카뉴 — 링크 하나로 카드뉴스 완성</title>
+<meta name="description" content="기사·블로그·Threads 링크 하나를 붙여넣으면 원고 작성, 사진 수집, 카드 배치까지 자동. 인스타그램 카드뉴스(1080×1350 PNG/MP4)를 만드는 Windows 앱 카뉴(Kanew), 베타 무료 다운로드.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="카뉴 — 링크 하나로 카드뉴스 완성">
+<meta property="og:description" content="링크 하나 붙여넣으면 원고 → 사진 → 카드 배치까지 자동. 인스타그램 카드뉴스를 만드는 Windows 앱, 베타 무료.">
+<meta property="og:image" content="assets/cards/set-1.jpg">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F7F6F3">
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141414'/%3E%3Ctext x='32' y='45' font-size='36' font-weight='800' text-anchor='middle' fill='%23fff' font-family='Pretendard,Apple SD Gothic Neo,Malgun Gothic,sans-serif'%3E%EC%B9%B4%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+<style>
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --ink: #141414;
+    --muted: #6B6B6B;
+    --line: #E4E2DD;
+    --green: #1F9D55;
+    --shadow: 0 20px 50px rgba(20, 20, 20, .12);
+    --gutter: 16px;
+    --max: 1120px;
+    --sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (min-width: 768px)  { :root { --gutter: 32px; } }
+  @media (min-width: 1200px) { :root { --gutter: 40px; } }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    word-break: keep-all;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (min-width: 768px) { body { font-size: 18px; } }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; }
+  p { margin: 0; }
+  h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2.25rem, 5vw, 4.25rem); line-height: 1.12; }
+  h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); }
+  h3 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.35; }
+  p, dt, dd, li, h1, h2, h3 { overflow-wrap: break-word; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .skip { position: absolute; left: 16px; top: -200px; z-index: 100; background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 10px; font-weight: 600; text-decoration: none; }
+  .skip:focus { top: 12px; }
+
+  .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+  .lead { color: var(--muted); max-width: 34em; text-wrap: pretty; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.9rem; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--ink); color: #fff; border: 0; border-radius: 10px;
+    padding: 15px 22px; font: inherit; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em;
+    text-decoration: none; line-height: 1.2; cursor: pointer;
+    transition: transform .12s ease, background-color .15s ease;
+  }
+  .btn:hover { background: #000; }
+  .btn:active { transform: scale(.985); }
+  .btn-text { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; cursor: pointer; }
+  .btn-text:hover { color: var(--muted); }
+
+  /* ---------- header ---------- */
+  .site-header { border-bottom: 1px solid var(--line); }
+  .site-header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .wordmark { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; }
+  .wordmark .ko { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .wordmark .en { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--muted); }
+  .site-header nav a { font-size: 0.95rem; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .site-header nav a:hover { color: var(--muted); }
+
+  /* ---------- sections ---------- */
+  .sec { padding: 64px 0; }
+  @media (min-width: 900px) { .sec { padding: 104px 0; } }
+  .sec + .sec { padding-top: 0; }
+  .sec-head { margin-bottom: 32px; }
+  .sec-head .lead { margin-top: 12px; }
+  @media (min-width: 900px) { .sec-head { margin-bottom: 40px; } }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 48px 0 0; }
+  @media (min-width: 900px) { .hero { padding: 88px 0 0; } }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .hero-grid > * { min-width: 0; }
+  @media (min-width: 900px) {
+    .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+  }
+  .hero-copy h1 { margin-bottom: 20px; }
+  .hero-copy .lead { margin-bottom: 28px; }
+  .hero-copy .btn { width: 100%; max-width: 360px; }
+  .meta { margin-top: 12px; font-size: 0.9rem; color: var(--muted); }
+  .plain { margin-top: 20px; font-size: 0.95rem; color: var(--muted); max-width: 32em; }
+  .plain b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- demo stage ---------- */
+  .stage {
+    background: var(--surface); border-radius: 16px; padding: 20px;
+    box-shadow: 0 1px 0 rgba(20,20,20,.04), 0 12px 40px rgba(20,20,20,.06);
+    position: relative;
+  }
+  @media (min-width: 600px) { .stage { padding: 28px; } }
+  .d-row { display: flex; gap: 8px; align-items: stretch; }
+  .d-input {
+    flex: 1 1 auto; min-width: 0; height: 46px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 0 14px; display: flex; align-items: center; overflow: hidden; background: #fff;
+  }
+  .d-url {
+    display: inline-flex; align-items: center; white-space: nowrap; flex: none;
+    font-family: var(--mono); font-size: 13.5px; color: var(--ink); letter-spacing: 0;
+    will-change: transform;
+  }
+  .d-caret { display: inline-block; width: 1.5px; height: 17px; background: var(--ink); margin-left: 1px; opacity: 0; }
+  .is-typing .d-caret { opacity: 1; animation: blink 1s steps(2, start) infinite; }
+  @keyframes blink { to { opacity: 0; } }
+  .d-btn {
+    flex: none; height: 46px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--ink); color: #fff;
+    font: inherit; font-weight: 600; font-size: 0.95rem; pointer-events: none;
+    transition: transform .15s ease;
+  }
+  .d-btn.is-press { transform: scale(.94); }
+
+  .d-steps { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
+  .d-step { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--muted); transition: color .25s ease; }
+  .d-step.is-active, .d-step.is-done { color: var(--ink); }
+  .d-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); position: relative; flex: none; transition: background-color .25s ease, border-color .25s ease; }
+  .d-check::before { content: ""; position: absolute; left: 6px; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); transform: scale(0); }
+  .d-step.is-active .d-check { border-color: var(--green); }
+  .d-step.is-active .d-check::before { animation: dot 1s ease-in-out infinite; }
+  @keyframes dot { 0%, 100% { transform: scale(.45); opacity: .5; } 50% { transform: scale(1); opacity: 1; } }
+  .d-check::after {
+    content: ""; position: absolute; left: 6.5px; top: 3px; width: 5px; height: 10px;
+    border: solid #fff; border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0); transform-origin: 50% 60%;
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1.15);
+  }
+  .d-step.is-done .d-check { background: var(--green); border-color: var(--green); }
+  .d-step .s-done { display: none; } .d-step.is-done .s-doing { display: none; } .d-step.is-done .s-done { display: inline; }
+  .d-step .s-done em { font-style: normal; color: var(--muted); }
+  .d-step.is-done .d-check::after { transform: rotate(45deg) scale(1); }
+
+  .d-out { margin-top: 24px; }
+  .d-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 6px 0 14px; }
+  .d-card { margin: 0; min-width: 0; position: relative; aspect-ratio: 1080 / 1350; border: 1.5px dashed #D6D3CC; border-radius: 12px; transition: border-color .3s ease; }
+  .d-card::before { position: absolute; inset: 0; display: grid; place-items: center; font-size: .8rem; font-weight: 600; color: #B9B6AE; letter-spacing: .04em; }
+  .d-card:nth-child(1)::before { content: '01'; } .d-card:nth-child(2)::before { content: '02'; } .d-card:nth-child(3)::before { content: '03'; }
+  .d-card img { position: relative; display: block; opacity: 0; transform: translate(var(--sx), 36px) scale(.94); transition: transform .7s cubic-bezier(.2, .7, .2, 1), opacity .5s ease; transition-delay: inherit; }
+  .d-card:nth-child(1) { --sx: 60%;  --r: -3deg; transition-delay: 0s; }
+  .d-card:nth-child(2) { --sx: 0%;   --r: 0deg;  transition-delay: .12s; }
+  .d-card:nth-child(3) { --sx: -60%; --r: 3deg;  transition-delay: .24s; }
+  .d-cards.is-in .d-card { border-color: transparent; }
+  .d-cards.is-in .d-card img { opacity: 1; transform: translate(0, 0) rotate(var(--r)) scale(1); }
+  .d-card img { border-radius: 12px; box-shadow: var(--shadow); width: 100%; height: 100%; object-fit: cover; margin: -1.5px; width: calc(100% + 3px); height: calc(100% + 3px); }
+  .d-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; min-height: 24px; }
+  .d-cap { font-size: 0.85rem; color: var(--muted); opacity: 0; transition: opacity .4s ease; }
+  .d-cap.is-in { opacity: 1; }
+  .d-replay { font-size: 0.85rem; color: var(--muted); }
+  @media (max-width: 599px) {
+    .d-cards { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin: 0 -20px; padding: 6px 20px 16px; }
+    .d-cards::-webkit-scrollbar { display: none; }
+    .d-card { flex: 0 0 64%; scroll-snap-align: start; }
+    .d-card:nth-child(1) { --sx: 0%; }
+    .d-card:nth-child(3) { --sx: 0%; }
+  }
+
+  /* ---------- templates ---------- */
+  .tpl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .tpl-grid > * { min-width: 0; }
+  @media (min-width: 900px) { .tpl-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: stretch; } }
+  .tpl-preview { position: relative; aspect-ratio: 4 / 5; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; background: var(--line); width: min(100%, 420px); margin: 0 auto; }
+  @media (min-width: 900px) { .tpl-preview { width: min(100%, calc(70vh * 4 / 5)); margin: 0 auto; } }
+  .tpl-side { display: flex; flex-direction: column; justify-content: space-between; gap: 28px; }
+  .tpl-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s ease; }
+  .tpl-preview img.is-on { opacity: 1; }
+  .tpl-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 14px; }
+  @media (max-width: 599px) {
+    .tpl-list { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)); padding: 4px var(--gutter); }
+    .tpl-list::-webkit-scrollbar { display: none; }
+    .tpl-list > li { flex: 0 0 96px; scroll-snap-align: start; }
+  }
+  .tpl-btn { display: block; width: 100%; padding: 3px; margin: 0; border: 0; background: none; border-radius: 10px; cursor: pointer; font: inherit; text-align: left; color: var(--muted); }
+  .tpl-btn img { border-radius: 8px; width: 100%; outline: 2px solid transparent; outline-offset: 0; transition: outline-color .15s ease; }
+  .tpl-btn span { display: block; margin-top: 8px; font-size: 0.8rem; font-weight: 500; }
+  .tpl-btn:hover img { outline-color: var(--line); }
+  .tpl-btn[aria-pressed="true"] { color: var(--ink); }
+  .tpl-btn[aria-pressed="true"] img { outline-color: var(--ink); }
+  .tpl-btn[aria-pressed="true"] span { font-weight: 600; }
+  .tpl-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .tpl-notes { margin-top: 0; display: grid; gap: 8px; }
+  .tpl-notes .cap { font-weight: 500; }
+  .tpl-notes .tiny { font-size: 0.8rem; color: var(--muted); }
+
+  /* ---------- requirements ---------- */
+  .req { background: var(--surface); border-radius: 16px; padding: 8px 20px; max-width: 920px; }
+  @media (min-width: 600px) { .req { padding: 10px 28px; } }
+  .req dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  @media (min-width: 600px) { .req dl { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; } }
+  @media (min-width: 900px) { .req dl { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; } }
+  .req .item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .req .item:last-child { border-bottom: 0; }
+  @media (min-width: 600px) and (max-width: 899px) { .req .item:nth-last-child(-n+2) { border-bottom: 0; } }
+  @media (min-width: 900px) { .req .item:nth-last-child(-n+3) { border-bottom: 0; } }
+  .req dt { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+  .req dd { margin: 4px 0 0; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.015em; }
+  .req dd small { display: block; font-weight: 400; font-size: 0.9rem; color: var(--muted); margin-top: 2px; }
+
+  /* ---------- steps ---------- */
+  .steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); counter-reset: s; }
+  .steps > li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 18px 12px; align-items: start; padding: 26px 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 600px) { .steps > li { grid-template-columns: 72px minmax(0, 1fr); gap: 20px 16px; padding: 32px 0; } }
+  @media (min-width: 900px) { .steps > li { grid-template-columns: 80px minmax(0, 1fr) minmax(0, 340px); gap: 48px; align-items: center; padding: 36px 0; } }
+  .steps .n { font-weight: 800; font-size: 44px; letter-spacing: -0.04em; line-height: 1; color: #CFCCC5; margin-top: -2px; }
+  @media (min-width: 600px) { .steps .n { font-size: 48px; } }
+  .steps h3 { margin-bottom: 6px; }
+  .steps .scene { grid-column: 1 / -1; min-width: 0; }
+  @media (min-width: 900px) { .steps .scene { grid-column: auto; } }
+
+  /* mini scenes — same components as the hero stage, static and small */
+  .mini {
+    background: var(--surface); border-radius: 12px; padding: 14px;
+    box-shadow: 0 1px 0 rgba(20,20,20,.04), 0 12px 40px rgba(20,20,20,.06);
+    max-width: 420px;
+  }
+  .mini .d-row { gap: 8px; }
+  .mini .d-input { height: 38px; padding: 0 12px; }
+  .mini .d-url { display: block; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .mini .d-btn { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; font-size: 0.85rem; border-radius: 9px; }
+  .mini .d-step { font-size: 0.9rem; }
+  .m-file { display: flex; align-items: center; gap: 10px; }
+  .m-chip {
+    flex: 1 1 auto; min-width: 0; height: 38px; display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; background: #fff;
+    font-family: var(--mono); font-size: 12px; color: var(--ink); letter-spacing: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .m-chip::before { content: ""; flex: none; width: 11px; height: 14px; border: 1.5px solid var(--muted); border-radius: 2px 4px 2px 2px; }
+  .m-pill { flex: none; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; }
+  .m-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .m-cards li { margin: 0; min-width: 0; }
+  .m-cards img { width: 100%; aspect-ratio: 1080 / 1350; object-fit: cover; border-radius: 6px; box-shadow: 0 6px 18px rgba(20,20,20,.10); }
+  .steps p { color: var(--muted); font-size: 0.98rem; }
+  .steps a { font-weight: 600; color: var(--ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .steps a:hover { color: var(--muted); }
+  .note { margin-top: 24px; padding: 18px 20px; background: var(--surface); border-radius: 12px; font-size: 0.95rem; color: var(--muted); max-width: 44em; }
+  .note b { color: var(--ink); font-weight: 600; }
+  .start-cta { margin-top: 36px; }
+  .start-cta .btn { width: 100%; max-width: 360px; }
+
+  /* ---------- faq ---------- */
+  .faq { margin: 0; border-top: 1px solid var(--line); }
+  .faq > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 768px) { .faq > div { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; padding: 28px 0; } }
+  .faq dt { font-weight: 600; font-size: 1.05rem; letter-spacing: -0.02em; line-height: 1.4; }
+  .faq dd { margin: 0; color: var(--muted); font-size: 0.98rem; max-width: 34em; }
+  .faq dd p + p { margin-top: 8px; }
+
+  /* ---------- footer ---------- */
+  .site-footer { border-top: 1px solid var(--line); padding: 36px 0 48px; }
+  .site-footer .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 40px; }
+  .site-footer .legal { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 32px; font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .d-replay { display: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="#main" aria-label="카뉴 홈">
+      <span class="ko">카뉴</span><span class="en">KANEW</span>
+    </a>
+    <nav aria-label="주요 링크">
+      <a href="https://github.com/echidna08/kanew/releases/latest/download/Kanew.exe" data-dl target="_blank" rel="noopener noreferrer">다운로드</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1. HERO + DEMO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 id="hero-title">링크 하나 붙여넣으면, 카드뉴스가 만들어집니다.</h1>
+        <p class="lead">기사·블로그·Threads 링크를 넣으면 원고를 쓰고, 사진을 찾고, 템플릿에 배치해 인스타그램 캐러셀로 내보냅니다.</p>
+        <a class="btn" href="https://github.com/echidna08/kanew/releases/latest/download/Kanew.exe" data-dl target="_blank" rel="noopener noreferrer">Windows용 무료 다운로드</a>
+        <p class="meta">Windows 10/11 · 설치 없는 실행 파일 · 베타</p>
+        <p class="plain"><b>Claude Pro 이상 구독이 필요해요</b> — 원고는 내 Claude 계정으로 만들어요.</p>
+      </div>
+
+      <div class="stage" id="demo" aria-label="시연: 기사 링크를 붙여넣고 만들기를 누르면 원고 작성, 사진 찾기, 카드 배치가 차례로 끝나고 카드 3장이 완성되는 과정">
+        <div class="d-row" aria-hidden="true">
+          <div class="d-input"><span class="d-url"><span class="d-url-text"></span><span class="d-caret"></span></span></div>
+          <button class="d-btn" type="button" tabindex="-1">만들기</button>
+        </div>
+        <ol class="d-steps" aria-hidden="true">
+          <li class="d-step"><span class="d-check"></span><span class="s-doing">원고 쓰는 중</span><span class="s-done">원고 완성 <em>· 기사 요약, 카드 3장 분량</em></span></li>
+          <li class="d-step"><span class="d-check"></span><span class="s-doing">사진 찾는 중</span><span class="s-done">사진 찾음 <em>· 기사 속 이미지 2장</em></span></li>
+          <li class="d-step"><span class="d-check"></span><span class="s-doing">카드에 배치하는 중</span><span class="s-done">배치 완료 <em>· 티커 템플릿</em></span></li>
+        </ol>
+        <div class="d-out">
+          <div class="d-cards">
+            <figure class="d-card"><img src="assets/cards/set-1.jpg" width="1080" height="1350" alt="완성 카드 1 (표지): ‘버건디 컬러로 나온 새 폰 첫인상’이라는 큰 제목과 버건디 색 스마트폰 사진"></figure>
+            <figure class="d-card"><img src="assets/cards/set-2.jpg" width="1080" height="1350" alt="완성 카드 2 (본문): 저장공간 512GB, 램 12GB 등 새 스마트폰의 주요 사양을 정리한 스펙 페이지"></figure>
+            <figure class="d-card"><img src="assets/cards/set-3.jpg" width="1080" height="1350" alt="완성 카드 3 (마지막 장): 네이비 배경에 팔로우를 유도하는 문구가 적힌 마무리 카드"></figure>
+          </div>
+          <div class="d-foot">
+            <span class="d-cap">3장 · 1080×1350 · 약 1분</span>
+            <button class="btn-text d-replay" type="button">다시 보기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. TEMPLATES -->
+  <section class="sec" aria-labelledby="tpl-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="tpl-title">같은 원고, 템플릿만 바꿔보세요</h2>
+        <p class="lead">아래 미리보기는 전부 카뉴가 직접 뽑은 결과물입니다. 템플릿을 눌러 바꿔보세요.</p>
+      </div>
+      <div class="tpl-grid">
+        <div class="tpl-preview" id="tpl-preview" aria-live="polite">
+          <img src="assets/cards/tpl-ticker.jpg" width="1080" height="1350" data-tpl="ticker" loading="lazy" alt="티커 템플릿: 종이색 바탕에 굵은 검정 글자와 뉴스 자막 띠가 들어간 카드">
+          <img src="assets/cards/tpl-clean.jpg" width="1080" height="1350" data-tpl="clean" class="is-on" alt="클린 템플릿: 여백이 넓고 글자 중심의 미니멀한 카드">
+          <img src="assets/cards/tpl-mono.jpg" width="1080" height="1350" data-tpl="mono" loading="lazy" alt="모노 템플릿: 흑백 대비가 강한 모노톤 카드">
+          <img src="assets/cards/tpl-poster.jpg" width="1080" height="1350" data-tpl="poster" loading="lazy" alt="포스터 템플릿: 큰 제목과 전면 이미지를 쓴 포스터 느낌의 카드">
+          <img src="assets/cards/tpl-feedA.jpg" width="1080" height="1350" data-tpl="feedA" loading="lazy" alt="피드 A 템플릿: 인스타 피드에 자연스럽게 섞이는 기본형 카드">
+          <img src="assets/cards/tpl-feedD.jpg" width="1080" height="1350" data-tpl="feedD" loading="lazy" alt="피드 D 템플릿: 사진 위에 강조색 제목과 태그를 얹은 패션·스타일 카드 디자인">
+          <img src="assets/cards/tpl-tiles.jpg" width="1080" height="1350" data-tpl="tiles" loading="lazy" alt="타일 템플릿: 여러 이미지를 타일처럼 배치한 카드">
+          <img src="assets/cards/tpl-pop.jpg" width="1080" height="1350" data-tpl="pop" loading="lazy" alt="팝 템플릿: 선명한 색과 굵은 글자를 쓴 팝 스타일 카드">
+          <img src="assets/cards/tpl-gameWide.jpg" width="1080" height="1350" data-tpl="gameWide" loading="lazy" alt="게임 와이드 템플릿: 가로로 긴 게임 화면 이미지를 살린 카드">
+          <img src="assets/cards/tpl-brief.jpg" width="1080" height="1350" data-tpl="brief" loading="lazy" alt="브리프 템플릿: 선명한 바탕에 번호 태그와 제목, 사진 박스를 둔 뉴스 요약 카드 디자인">
+        </div>
+        <div class="tpl-side">
+          <ul class="tpl-list" aria-label="템플릿 고르기">
+            <li><button class="tpl-btn" type="button" data-tpl="ticker" aria-pressed="false"><img src="assets/cards/tpl-ticker.jpg" width="1080" height="1350" loading="lazy" alt="티커 템플릿 미리보기"><span>티커</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="clean" aria-pressed="true"><img src="assets/cards/tpl-clean.jpg" width="1080" height="1350" loading="lazy" alt="클린 템플릿 미리보기"><span>클린</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="mono" aria-pressed="false"><img src="assets/cards/tpl-mono.jpg" width="1080" height="1350" loading="lazy" alt="모노 템플릿 미리보기"><span>모노</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="poster" aria-pressed="false"><img src="assets/cards/tpl-poster.jpg" width="1080" height="1350" loading="lazy" alt="포스터 템플릿 미리보기"><span>포스터</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="feedA" aria-pressed="false"><img src="assets/cards/tpl-feedA.jpg" width="1080" height="1350" loading="lazy" alt="피드 A 템플릿 미리보기"><span>피드 A</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="feedD" aria-pressed="false"><img src="assets/cards/tpl-feedD.jpg" width="1080" height="1350" loading="lazy" alt="피드 D 템플릿 미리보기"><span>피드 D</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="tiles" aria-pressed="false"><img src="assets/cards/tpl-tiles.jpg" width="1080" height="1350" loading="lazy" alt="타일 템플릿 미리보기"><span>타일</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="pop" aria-pressed="false"><img src="assets/cards/tpl-pop.jpg" width="1080" height="1350" loading="lazy" alt="팝 템플릿 미리보기"><span>팝</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="gameWide" aria-pressed="false"><img src="assets/cards/tpl-gameWide.jpg" width="1080" height="1350" loading="lazy" alt="게임 와이드 템플릿 미리보기"><span>게임 와이드</span></button></li>
+            <li><button class="tpl-btn" type="button" data-tpl="brief" aria-pressed="false"><img src="assets/cards/tpl-brief.jpg" width="1080" height="1350" loading="lazy" alt="브리프 템플릿 미리보기"><span>브리프</span></button></li>
+          </ul>
+          <div class="tpl-notes">
+            <p class="cap">템플릿 26종 · 컬러·글꼴 바꾸기 · 직접 만든 템플릿 저장</p>
+            <p class="tiny">미리보기 사진은 모두 AI(FLUX)로 만든 이미지입니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. REQUIREMENTS -->
+  <section class="sec" aria-labelledby="req-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="req-title">필요한 것</h2>
+        <p class="lead">다운로드 전에 확인하세요. 카뉴는 자체 AI 서버가 없고, 내 PC의 Claude Code가 내 계정으로 원고를 씁니다.</p>
+      </div>
+      <div class="req">
+        <dl>
+          <div class="item"><dt>운영체제</dt><dd>Windows 10/11<small>Mac은 추후</small></dd></div>
+          <div class="item"><dt>AI</dt><dd>Claude Pro 이상 구독<small>본인 계정 · Claude Code</small></dd></div>
+          <div class="item"><dt>AI 사용료</dt><dd>별도 없음<small>내 구독으로 돌아감</small></dd></div>
+          <div class="item"><dt>가격</dt><dd>베타 기간 무료</dd></div>
+          <div class="item"><dt>설치</dt><dd>필요 없음<small>포터블 exe</small></dd></div>
+          <div class="item"><dt>출력</dt><dd>PNG / MP4<small>1080×1350</small></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. START -->
+  <section class="sec" id="start" aria-labelledby="start-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="start-title">시작하기 3단계</h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="n" aria-hidden="true">1</span>
+          <div><h3>다운로드 후 실행</h3><p>원하는 폴더에 두고 더블클릭. 설치 과정이 없습니다.</p></div>
+          <div class="scene">
+            <div class="mini" aria-hidden="true">
+              <div class="m-file"><span class="m-chip">CardNewsMaker_beta_v1.0.exe</span><span class="m-pill">실행</span></div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n" aria-hidden="true">2</span>
+          <div><h3>Claude Code 설치 후 본인 Claude 계정 로그인</h3><p>Pro 이상 구독이 있어야 합니다. 처음이면 <a href="https://docs.claude.com/en/docs/claude-code/setup" target="_blank" rel="noopener noreferrer">Claude Code 설치 안내</a>를 따라 하면 됩니다.</p></div>
+          <div class="scene">
+            <div class="mini" aria-hidden="true">
+              <div class="d-step is-done"><span class="d-check"></span><span>Claude 계정 연결됨</span></div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="n" aria-hidden="true">3</span>
+          <div><h3>링크 붙여넣고 ‘원고 만들기’</h3><p>기사나 스레드 링크를 넣고 버튼 하나. 템플릿 고르고 PNG/MP4로 저장하면 끝.</p></div>
+          <div class="scene">
+            <div class="mini">
+              <div class="d-row" aria-hidden="true">
+                <div class="d-input"><span class="d-url">https://news.example.com/article/new-phone-burgundy</span></div>
+                <span class="d-btn">만들기</span>
+              </div>
+              <ul class="m-cards">
+                <li><img src="assets/cards/set-1.jpg" width="1080" height="1350" loading="lazy" alt="결과 카드 1 (표지): 버건디 색 스마트폰 사진과 큰 제목"></li>
+                <li><img src="assets/cards/set-2.jpg" width="1080" height="1350" loading="lazy" alt="결과 카드 2 (본문): 새 스마트폰 주요 사양 정리"></li>
+                <li><img src="assets/cards/set-3.jpg" width="1080" height="1350" loading="lazy" alt="결과 카드 3 (마지막 장): 팔로우 유도 문구가 적힌 마무리 카드"></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+      </ol>
+      <p class="note" role="note">처음 실행 시 Windows가 <b>‘알 수 없는 게시자’</b> 경고를 띄울 수 있어요. <b>‘추가 정보’ → ‘실행’</b>을 누르면 됩니다. 베타라 아직 코드 서명 전이에요.</p>
+      <div class="start-cta">
+        <a class="btn" href="https://github.com/echidna08/kanew/releases/latest/download/Kanew.exe" data-dl target="_blank" rel="noopener noreferrer">Windows용 무료 다운로드</a>
+        <p class="meta">Windows 10/11 · 설치 없는 실행 파일 · 베타</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. FAQ -->
+  <section class="sec" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="faq-title">자주 묻는 질문</h2>
+      </div>
+      <dl class="faq">
+        <div>
+          <dt>가격은 얼마예요?</dt>
+          <dd><p>베타 기간 무료입니다. 정식 가격이 정해지면 미리 공지할게요.</p></dd>
+        </div>
+        <div>
+          <dt>실행하니까 Windows 경고가 떠요.</dt>
+          <dd><p>처음 실행할 때 Windows가 ‘알 수 없는 게시자’(SmartScreen) 경고를 띄울 수 있어요. ‘추가 정보’ → ‘실행’을 누르면 됩니다.</p><p>베타라 아직 코드 서명 전이라 생기는 경고예요. 정식 버전에서는 서명을 적용할 예정입니다.</p></dd>
+        </div>
+        <div>
+          <dt>뭐가 필요해요?</dt>
+          <dd><p>Windows PC와 Claude Pro 이상 구독. 원고는 내 PC에서 본인 Claude 계정(Claude Code)으로 만들어지기 때문에, 카뉴에 따로 내는 AI 사용료는 없습니다.</p></dd>
+        </div>
+        <div>
+          <dt>맥에서도 돼요?</dt>
+          <dd><p>지금은 Windows만 됩니다. macOS는 베타 반응을 보고 추후 검토할 예정이에요.</p></dd>
+        </div>
+        <div>
+          <dt>만든 카드의 저작권은요?</dt>
+          <dd><p>내가 만든 결과물은 내 것입니다. 카뉴는 결과물에 대해 어떤 권리도 주장하지 않아요.</p><p>다만 원본 기사의 글과 사진은 각 저작권자의 것이니, 인용 범위와 사진 출처는 게시 전에 직접 확인해 주세요.</p></dd>
+        </div>
+        <div>
+          <dt>모바일 앱은 없어요?</dt>
+          <dd><p>아직은 데스크톱(Windows) 앱만 있습니다. 모바일은 나중에요.</p></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="row">
+      <a class="wordmark" href="#main" aria-label="카뉴 홈"><span class="ko">카뉴</span><span class="en">KANEW</span></a>
+      <span class="muted small">© 2026 카뉴 (Kanew)</span>
+    </div>
+    <div class="legal">
+      <span>Claude는 Anthropic의 상표이며, 카뉴는 Anthropic과 관련이 없습니다.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ▼▼▼ 다운로드 주소 — 여기만 바꾸면 됩니다 ▼▼▼
+  const DOWNLOAD_URL = 'https://github.com/echidna08/kanew/releases/latest/download/Kanew.exe';
+  // ▲▲▲ ------------------------------------- ▲▲▲
+
+  (function () {
+    document.querySelectorAll('a[data-dl]').forEach(function (a) { a.href = DOWNLOAD_URL; });
+
+    /* ---------- demo stage ---------- */
+    var stage = document.getElementById('demo');
+    if (stage) {
+      var inputBox = stage.querySelector('.d-input');
+      var urlWrap = stage.querySelector('.d-url');
+      var urlText = stage.querySelector('.d-url-text');
+      var makeBtn = stage.querySelector('.d-btn');
+      var steps = Array.prototype.slice.call(stage.querySelectorAll('.d-step'));
+      var cards = stage.querySelector('.d-cards');
+      var cap = stage.querySelector('.d-cap');
+      var replay = stage.querySelector('.d-replay');
+      var URL_TEXT = 'https://news.example.com/article/new-phone-burgundy';
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var timers = [];
+      var active = false;
+      var onScreen = true;
+
+      function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+      function clearAll() { timers.forEach(clearTimeout); timers = []; }
+
+      function setUrl(text) {
+        urlText.textContent = text;
+        // keep the tail visible like a real input scrolling as you type
+        var overflow = urlWrap.scrollWidth - inputBox.clientWidth + 28;
+        urlWrap.style.transform = overflow > 0 ? 'translateX(' + (-overflow) + 'px)' : '';
+      }
+      function reset() {
+        stage.classList.remove('is-typing', 'is-done');
+        setUrl('');
+        makeBtn.classList.remove('is-press');
+        steps.forEach(function (s) { s.classList.remove('is-active', 'is-done'); });
+        cards.classList.remove('is-in');
+        cap.classList.remove('is-in');
+      }
+      function finish() {
+        setUrl(URL_TEXT);
+        steps.forEach(function (s) { s.classList.add('is-done'); });
+        cards.classList.add('is-in');
+        cap.classList.add('is-in');
+        stage.classList.add('is-done');
+      }
+      function play() {
+        clearAll();
+        reset();
+        if (reduced.matches) { finish(); return; }
+
+        var t = 500;
+        var perChar = 36;
+        stage.classList.add('is-typing');
+        for (var i = 1; i <= URL_TEXT.length; i++) {
+          after(t + i * perChar, (function (n) { return function () { setUrl(URL_TEXT.slice(0, n)); }; })(i));
+        }
+        t += URL_TEXT.length * perChar + 400;
+
+        after(t, function () { stage.classList.remove('is-typing'); makeBtn.classList.add('is-press'); });
+        after(t + 180, function () { makeBtn.classList.remove('is-press'); });
+        t += 480;
+
+        steps.forEach(function (s, i) {
+          after(t + i * 1000, function () { s.classList.add('is-active'); });
+          after(t + i * 1000 + 950, function () { s.classList.remove('is-active'); s.classList.add('is-done'); });
+        });
+        t += 3 * 1000 + 250;
+
+        after(t, function () { cards.classList.add('is-in'); });
+        after(t + 900, function () { cap.classList.add('is-in'); stage.classList.add('is-done'); });
+
+        after(t + 4600, play);
+      }
+      function start() { if (active) return; active = true; play(); }
+      function stop() { active = false; clearAll(); }
+      function sync() { if (onScreen && !document.hidden) start(); else stop(); }
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          onScreen = entries[0].isIntersecting;
+          sync();
+        }, { threshold: 0.2 }).observe(stage);
+      } else {
+        start();
+      }
+      document.addEventListener('visibilitychange', sync);
+      replay.addEventListener('click', function () { active = true; play(); });
+      if (reduced.addEventListener) reduced.addEventListener('change', function () { if (active) play(); });
+      window.addEventListener('resize', function () { setUrl(urlText.textContent); });
+    }
+
+    /* ---------- template switcher ---------- */
+    var preview = document.getElementById('tpl-preview');
+    if (preview) {
+      var imgs = preview.querySelectorAll('img[data-tpl]');
+      var btns = document.querySelectorAll('.tpl-btn[data-tpl]');
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var key = b.getAttribute('data-tpl');
+          imgs.forEach(function (im) { im.classList.toggle('is-on', im.getAttribute('data-tpl') === key); });
+          btns.forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>
